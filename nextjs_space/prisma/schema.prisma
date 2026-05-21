@@ -1,0 +1,47 @@
+generator client {
+    provider = "prisma-client-js"
+    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+    output = "/home/ubuntu/employee_time_tracker/nextjs_space/node_modules/.prisma/client"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+}
+
+model User {
+  id            String      @id @default(cuid())
+  name          String
+  email         String      @unique
+  password      String
+  role          Role        @default(EMPLOYEE)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  timeEntries   TimeEntry[]
+
+  @@index([email])
+}
+
+model TimeEntry {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date        DateTime @db.Date
+  startTime   DateTime
+  endTime     DateTime?
+  duration    Int?     // in seconds
+  project     String   @default("General")
+  task        String   @default("")
+  notes       String   @default("")
+  isClockIn   Boolean  @default(false) // true if this was created via clock in/out
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, date])
+  @@index([date])
+}
